@@ -2,20 +2,22 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os/exec"
 	"regexp"
 	"strings"
 )
 
+//CommitHashRegexp match master commit hash
 var CommitHashRegexp = `(?m)[a-z0-9]{40}\srefs/heads/master$`
 
+//Watcher type
 type Watcher struct {
 	ServiceName string
 	ServicePath string
 }
 
+//Start compares master and local commit on master
 func (w *Watcher) Start() error {
 	for {
 		hash, err := w.LocalMasterHash()
@@ -27,12 +29,15 @@ func (w *Watcher) Start() error {
 			return err
 		}
 		if hash != remoteHash {
-			fmt.Println("REMOTE HAS CHANGED")
+			err := PullRepository(w.ServicePath)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
-		return nil
 	}
 }
 
+//LocalMasterHash returns current local commit hash
 func (w *Watcher) LocalMasterHash() (string, error) {
 	checker, err := regexp.Compile(CommitHashRegexp)
 	if err != nil {
@@ -48,6 +53,7 @@ func (w *Watcher) LocalMasterHash() (string, error) {
 	return hash, nil
 }
 
+//RemoteMasterHash returns latest remote master hash
 func (w *Watcher) RemoteMasterHash() (string, error) {
 	checker, err := regexp.Compile(CommitHashRegexp)
 	if err != nil {
@@ -63,6 +69,7 @@ func (w *Watcher) RemoteMasterHash() (string, error) {
 	return hash, nil
 }
 
+//WatchCommits creates a new watcher for every service specified
 func WatchCommits(c *ServerConfig) {
 	for key, value := range c.Services {
 		w := new(Watcher)
