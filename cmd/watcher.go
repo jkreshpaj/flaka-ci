@@ -20,6 +20,7 @@ type Watcher struct {
 //Start compares master and local commit on master
 func (w *Watcher) Start() error {
 	for {
+		log.Println("Process running")
 		hash, err := w.LocalMasterHash()
 		if err != nil {
 			return err
