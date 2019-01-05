@@ -1,5 +1,3 @@
 # flaka-ci
 
 testing
-
-ss
