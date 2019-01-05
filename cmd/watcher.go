@@ -20,6 +20,7 @@ type Watcher struct {
 //Start compares master and local commit on master
 func (w *Watcher) Start() error {
 	for {
+		log.Println("watching", w.ServicePath)
 		hash, err := w.LocalMasterHash()
 		if err != nil {
 			return err
@@ -75,8 +76,6 @@ func WatchCommits(c *ServerConfig) {
 		w := new(Watcher)
 		w.ServiceName = key
 		w.ServicePath = c.Dir + "/" + value
-		if err := w.Start(); err != nil {
-			log.Fatal(err)
-		}
+		go w.Start()
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"log"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -34,6 +35,7 @@ func (c *ServerConfig) SetDir() error {
 	if err != nil {
 		return err
 	}
+	log.Println("Listening dir ", dir)
 	c.Dir = dir
 	return nil
 }
