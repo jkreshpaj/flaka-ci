@@ -1,5 +1,5 @@
 services:
   test:
     path: /
-    command: go install
+    command: echo Is Working
 port: 2000
