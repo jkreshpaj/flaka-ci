@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+	"strings"
 )
 
 //UpdateLogRegexp match git pull log
@@ -25,7 +26,33 @@ func PullRepository(path string, done chan bool) error {
 		return err
 	}
 	updateLog := checker.FindString(string(stdout.Bytes()))
-	log.Println("\u001b[33m" + "[i] " + updateLog + "\u001b[0m")
+	log.Println("\u001b[33m" + "[i] " + path + " " + updateLog + "\u001b[0m")
 	done <- true
+	return nil
+}
+
+//ExecCommand runs command of the service specified in yml file
+func ExecCommand(path string, command string) error {
+	commands := strings.Split(command, " ")
+	var cmd *exec.Cmd
+	if len(commands) > 1 {
+		cmd = exec.Command(commands[0], commands[1:]...)
+	} else {
+		cmd = exec.Command(commands[0])
+	}
+	var stdout, stderr bytes.Buffer
+	cmd.Dir = path
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Println("An error has occured while running command", command)
+		if stderr.String() != "" {
+			errstd := strings.Split(stderr.String(), "\n")[0]
+			log.Println(errstd)
+		}
+	}
+	if stdout.String() != "" {
+		log.Println(stdout.String())
+	}
 	return nil
 }

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -31,11 +31,18 @@ func (w *Watcher) Start() error {
 		}
 		if hash != remoteHash {
 			done := make(chan bool)
-			err := PullRepository(w.ServicePath, done)
-			if err != nil {
-				return err
+			go PullRepository(w.ServicePath, done)
+			select {
+			case <-done:
+				if w.ServiceCommand == "" {
+					return nil
+				}
+				go func() {
+					if err := ExecCommand(w.ServicePath, w.ServiceCommand); err != nil {
+						log.Println(err)
+					}
+				}()
 			}
-			fmt.Println(<-done)
 		}
 	}
 }

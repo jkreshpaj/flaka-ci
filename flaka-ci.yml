@@ -1,4 +1,5 @@
 services:
   test:
     path: /
+    command: echo This shit works
 port: 2000
