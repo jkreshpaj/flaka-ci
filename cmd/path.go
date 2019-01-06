@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"log"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -12,7 +11,8 @@ import (
 //ServerConfig contains map of services directories
 type ServerConfig struct {
 	Dir      string
-	Services map[string]string `yaml:"services"`
+	Services map[string]map[string]string `yaml:"services"`
+	Port     int                          `yaml:"port"`
 }
 
 //Init server config
@@ -35,7 +35,6 @@ func (c *ServerConfig) SetDir() error {
 	if err != nil {
 		return err
 	}
-	log.Println("Listening dir ", dir)
 	c.Dir = dir
 	return nil
 }
@@ -54,9 +53,12 @@ func (c *ServerConfig) ReadConfig() error {
 
 //CheckDirectories check if directories exist
 func (c *ServerConfig) CheckDirectories() error {
-	for _, dir := range c.Services {
-		if _, err := os.Stat(c.Dir + "/" + dir); os.IsNotExist(err) {
-			return errors.New("flaka-ci.yml: Could not find directory " + dir + " in " + c.Dir)
+	for _, options := range c.Services {
+		if options["path"] == "" {
+			return errors.New("Error in flaka-ci.yml: path option is required")
+		}
+		if _, err := os.Stat(c.Dir + "/" + options["path"]); os.IsNotExist(err) {
+			return errors.New("flaka-ci.yml: Could not find directory " + options["path"] + " in " + c.Dir)
 		}
 	}
 	return nil

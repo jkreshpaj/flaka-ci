@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"bytes"
-	"log"
+	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -13,8 +13,9 @@ var CommitHashRegexp = `(?m)[a-z0-9]{40}\srefs/heads/master$`
 
 //Watcher type
 type Watcher struct {
-	ServiceName string
-	ServicePath string
+	ServiceName    string
+	ServicePath    string
+	ServiceCommand string
 }
 
 //Start compares master and local commit on master
@@ -29,10 +30,12 @@ func (w *Watcher) Start() error {
 			return err
 		}
 		if hash != remoteHash {
-			err := PullRepository(w.ServicePath)
+			done := make(chan bool)
+			err := PullRepository(w.ServicePath, done)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
+			fmt.Println(<-done)
 		}
 	}
 }
@@ -71,10 +74,11 @@ func (w *Watcher) RemoteMasterHash() (string, error) {
 
 //WatchCommits creates a new watcher for every service specified
 func WatchCommits(c *ServerConfig) {
-	for key, value := range c.Services {
+	for service, options := range c.Services {
 		w := new(Watcher)
-		w.ServiceName = key
-		w.ServicePath = c.Dir + "/" + value
+		w.ServiceName = service
+		w.ServicePath = c.Dir + "/" + options["path"]
+		w.ServiceCommand = options["command"]
 		go w.Start()
 	}
 }

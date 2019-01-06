@@ -1,2 +1,4 @@
 services:
-  test: /
+  test:
+    path: /
+port: 2000

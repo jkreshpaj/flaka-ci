@@ -11,7 +11,7 @@ import (
 var UpdateLogRegexp = `(?m)Updating [a-z0-9]{7}..[a-z0-9]{7}$`
 
 //PullRepository pulls a service repository
-func PullRepository(path string) error {
+func PullRepository(path string, done chan bool) error {
 	checker, err := regexp.Compile(UpdateLogRegexp)
 	if err != nil {
 		return err
@@ -26,5 +26,6 @@ func PullRepository(path string) error {
 	}
 	updateLog := checker.FindString(string(stdout.Bytes()))
 	log.Println("\u001b[33m" + "[i] " + updateLog + "\u001b[0m")
+	done <- true
 	return nil
 }
