@@ -1,5 +1,5 @@
 services:
   test:
     path: /
-    command: echo This shit works
+    command: go install
 port: 2000
