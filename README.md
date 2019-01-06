@@ -1,3 +1,3 @@
 # flaka-ci
 
-works
+ok
