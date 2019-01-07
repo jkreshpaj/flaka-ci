@@ -1,5 +1,6 @@
 services:
   test:
     path: /
-    command: echo Is Working
+    command: 
+      - command 1
 port: 2000
