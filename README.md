@@ -1,3 +1,1 @@
-# flaka-ci
-
-ok
+# Simple CI/CD tool in GO
