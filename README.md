@@ -19,11 +19,16 @@ $ ./flaka-ci
 ```sh
 $ flaka-ci --help
 Run flaka-ci [arg] to start server
+
 Usage:
   flaka-ci [flags]
+
 Flags:
-  -h, --help          help for flaka-ci
-      --port string   FlakaCI server port (default "7000")
+  -c, --config string   Configuration file (default "flaka-ci.yml")
+  -d, --detach          Detached mode runs FlakaCI in background
+  -h, --help            help for flaka-ci
+  -n, --notify string   Webhook url to send automatic log messages
+  -p, --port string     FlakaCI server port (default "7000")
 ```
 
 test2
