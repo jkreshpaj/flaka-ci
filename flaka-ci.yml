@@ -2,6 +2,6 @@ services:
   test:
     path: /
     command:
-      - echo COMMAND 1
-      - echo COMMAND 2
-      - echo COMMAND 3
+      - echo Testing errors
+      - ng build
+      - echo Other command

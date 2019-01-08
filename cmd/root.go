@@ -22,7 +22,9 @@ var rootCmd = &cobra.Command{
 	Use:   "flaka-ci",
 	Short: "Run flaka-ci [arg] to start server",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := server.Init(cmd.Flag("config").Value.String()); err != nil {
+		configFile := cmd.Flag("config").Value.String()
+		nURL := cmd.Flag("notify").Value.String()
+		if err := server.Init(configFile, nURL); err != nil {
 			log.Fatal(err)
 		}
 

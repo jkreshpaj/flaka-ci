@@ -33,13 +33,16 @@ func PullRepository(watcher *Watcher, done chan bool) error {
 	}
 	updateLog := checker.FindString(string(stdout.Bytes()))
 	log.Println("\u001b[33m" + "[i] " + watcher.ServicePath + " " + updateLog + "\u001b[0m")
-	ntf := Notification{
-		EndpointURL: "https://hooks.slack.com/services/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",
-		Message:     "SUCCESSFUL: Update service '*bold*" + watcher.ServiceName + "'",
-		Type:        "success",
-	}
-	if err := ntf.Send(); err != nil {
-		return err
+	if watcher.SendNotification() {
+		ntf := Notification{
+			EndpointURL: watcher.Notifications,
+			Title:       "SUCCESSFUL: Update service *" + watcher.ServiceName + "*",
+			Log:         "```Output:\n" + stdout.String() + "```",
+			Type:        "success",
+		}
+		if err := ntf.Send(); err != nil {
+			return err
+		}
 	}
 	done <- true
 	return nil
@@ -71,23 +74,42 @@ func ExecCommand(watcher *Watcher, command string) error {
 	time.Sleep(5 * time.Second)
 	err := cmd.Run()
 	if err != nil {
-		log.Println("An error has occured while running command", command)
 		if stderr.String() != "" {
-			errstd := strings.Split(stderr.String(), "\n")[0]
-			log.Println(errstd)
+			errstd := stderr.String()
+			HandleError("ERROR: Run command: "+strings.Join(commands, " "), errstd)
 		}
 	}
 	if stdout.String() != "" {
 		log.Println(stdout.String())
-	}
-	ntf := Notification{
-		EndpointURL: "https://hooks.slack.com/services/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",
-		Message:     "COMPLETED: Run command '" + strings.Join(commands, " ") + "' for service '" + watcher.ServiceName + "'",
-		Type:        "success",
-	}
-	if err := ntf.Send(); err != nil {
-		return err
+		if watcher.SendNotification() {
+			ntf := Notification{
+				EndpointURL: watcher.Notifications,
+				Title:       "COMPLETED: Run command *" + strings.Join(commands, " ") + "* for service *" + watcher.ServiceName + "*",
+				Log:         "```Output:\n" + stdout.String() + "```",
+				Type:        "success",
+			}
+			if err := ntf.Send(); err != nil {
+				return err
+			}
+		}
 	}
 	Mutex.Unlock()
 	return nil
+}
+
+//HandleError logs error and sends to slack
+func HandleError(text string, errLog string) {
+	if server.NotificationURL != "" {
+		ntf := Notification{
+			EndpointURL: server.NotificationURL,
+			Title:       text,
+			Log:         "```" + errLog + "```",
+			Type:        "error",
+		}
+		if err := ntf.Send(); err != nil {
+			log.Println(err)
+		}
+	}
+	log.Println(text)
+	log.Println(errLog)
 }

@@ -16,6 +16,7 @@ type Watcher struct {
 	ServiceName     string
 	ServicePath     string
 	ServiceCommands []string
+	Notifications   string
 }
 
 //Start compares remote and local commit on master
@@ -30,13 +31,15 @@ func (w *Watcher) Start() error {
 			return err
 		}
 		if hash != remoteHash {
-			ntf := Notification{
-				EndpointURL: "https://hooks.slack.com/services/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",
-				Message:     "STARTED: Job started for '" + w.ServiceName + "'",
-				Type:        "info",
-			}
-			if err := ntf.Send(); err != nil {
-				return err
+			if w.SendNotification() {
+				ntf := Notification{
+					EndpointURL: w.Notifications,
+					Title:       "STARTED: Job started for '" + w.ServiceName + "'",
+					Type:        "info",
+				}
+				if err := ntf.Send(); err != nil {
+					return err
+				}
 			}
 			done := make(chan bool)
 			go PullRepository(w, done)
@@ -89,12 +92,21 @@ func (w *Watcher) RemoteMasterHash() (string, error) {
 	return hash, nil
 }
 
+//SendNotification has webhook
+func (w *Watcher) SendNotification() bool {
+	if w.Notifications == "" {
+		return false
+	}
+	return true
+}
+
 //WatchCommits creates a new watcher for every service specified
 func WatchCommits(c *ServerConfig) {
 	for service, options := range c.Services {
 		w := new(Watcher)
 		w.ServiceName = service
 		w.ServicePath = c.Dir + "/" + options["path"].(string)
+		w.Notifications = c.NotificationURL
 		if options["command"] != nil {
 			commands, err := ParseCommands(options["command"])
 			if err != nil {

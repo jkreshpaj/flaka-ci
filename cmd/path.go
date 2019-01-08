@@ -10,12 +10,13 @@ import (
 
 //ServerConfig contains map of services directories
 type ServerConfig struct {
-	Dir      string
-	Services map[string]map[string]interface{} `yaml:"services"`
+	Dir             string
+	NotificationURL string
+	Services        map[string]map[string]interface{} `yaml:"services"`
 }
 
 //Init server config
-func (c *ServerConfig) Init(config string) error {
+func (c *ServerConfig) Init(config string, nURL string) error {
 	if err := c.SetDir(); err != nil {
 		return err
 	}
@@ -25,6 +26,7 @@ func (c *ServerConfig) Init(config string) error {
 	if err := c.CheckDirectories(); err != nil {
 		return err
 	}
+	c.NotificationURL = nURL
 	return nil
 }
 

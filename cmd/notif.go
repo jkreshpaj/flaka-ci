@@ -16,7 +16,8 @@ var colorMap = map[string]string{
 //Notification type contains webhook url message type of notifications
 type Notification struct {
 	EndpointURL string
-	Message     string
+	Title       string
+	Log         string
 	Type        string
 }
 
@@ -30,8 +31,9 @@ type Attachments []Settings
 
 //Settings message options
 type Settings struct {
-	Text  string `json:"text"`
+	Title string `json:"title"`
 	Color string `json:"color"`
+	Log   string `json:"text"`
 }
 
 //Send post request to webhook url
@@ -52,8 +54,9 @@ func (n *Notification) Parse() ([]byte, error) {
 	m := Message{}
 	attach := Attachments{}
 	settings := Settings{
-		Text:  n.Message,
+		Title: n.Title,
 		Color: colorMap[n.Type],
+		Log:   n.Log,
 	}
 	attach = append(attach, settings)
 	m.Attachments = attach
