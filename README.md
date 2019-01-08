@@ -26,5 +26,4 @@ Flags:
       --port string   FlakaCI server port (default "7000")
 ```
 
-tes
-2
+test
