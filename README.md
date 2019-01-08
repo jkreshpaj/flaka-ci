@@ -31,4 +31,4 @@ Flags:
   -p, --port string     FlakaCI server port (default "7000")
 ```
 
-testing commands1
+testing commands2
