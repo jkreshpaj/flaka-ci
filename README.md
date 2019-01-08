@@ -30,3 +30,5 @@ Flags:
   -n, --notify string   Webhook url to send automatic log messages
   -p, --port string     FlakaCI server port (default "7000")
 ```
+
+test
