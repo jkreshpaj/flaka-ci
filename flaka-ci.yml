@@ -5,4 +5,3 @@ services:
       - echo COMMAND 1
       - echo COMMAND 2
       - echo COMMAND 3
-port: 2000

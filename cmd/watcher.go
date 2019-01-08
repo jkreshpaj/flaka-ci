@@ -38,13 +38,11 @@ func (w *Watcher) Start() error {
 					return nil
 				}
 				for _, command := range w.ServiceCommands {
-					cmdDone := make(chan bool)
 					go func(cmd string) {
-						if err := ExecCommand(w.ServicePath, cmd, cmdDone); err != nil {
+						if err := ExecCommand(w.ServicePath, cmd); err != nil {
 							log.Println(err)
 						}
 					}(command)
-					<-cmdDone
 				}
 			}
 		}

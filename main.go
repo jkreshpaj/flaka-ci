@@ -2,18 +2,7 @@ package main
 
 import "github.com/flakaal/flaka-ci/cmd"
 
-type ServerConfig struct {
-	Dir      string
-	Services map[string]map[string]interface{} `yaml:"services"`
-	Port     int                               `yaml:"port"`
-}
-
 func main() {
-
-	// arr := reflect.ValueOf(c.Services["test"]["command"])
-	// for i := 0; i < arr.Len(); i++ {
-	// 	fmt.Printf(arr.Index(i).Elem().String())
-	// }
-
+	//slack webhook https://hooks.slack.com/services/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
 	cmd.Execute()
 }

@@ -12,15 +12,14 @@ import (
 type ServerConfig struct {
 	Dir      string
 	Services map[string]map[string]interface{} `yaml:"services"`
-	Port     int                               `yaml:"port"`
 }
 
 //Init server config
-func (c *ServerConfig) Init() error {
+func (c *ServerConfig) Init(config string) error {
 	if err := c.SetDir(); err != nil {
 		return err
 	}
-	if err := c.ReadConfig(); err != nil {
+	if err := c.ReadConfig(config); err != nil {
 		return err
 	}
 	if err := c.CheckDirectories(); err != nil {
@@ -40,8 +39,8 @@ func (c *ServerConfig) SetDir() error {
 }
 
 //ReadConfig reads services from yml file
-func (c *ServerConfig) ReadConfig() error {
-	data, err := ioutil.ReadFile(c.Dir + "/flaka-ci.yml")
+func (c *ServerConfig) ReadConfig(file string) error {
+	data, err := ioutil.ReadFile(c.Dir + "/" + file)
 	if err != nil {
 		return err
 	}

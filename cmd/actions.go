@@ -7,10 +7,14 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 //UpdateLogRegexp match git pull log
 var UpdateLogRegexp = `(?m)Updating [a-z0-9]{7}..[a-z0-9]{7}$`
+
+//Mutex lock/unclock command
+var Mutex = &sync.Mutex{}
 
 //PullRepository pulls a service repository
 func PullRepository(path string, done chan bool) error {
@@ -43,7 +47,8 @@ func ParseCommands(commands interface{}) ([]string, error) {
 }
 
 //ExecCommand runs command of the service specified in yml file
-func ExecCommand(path string, command string, done chan bool) error {
+func ExecCommand(path string, command string) error {
+	Mutex.Lock()
 	commands := strings.Split(command, " ")
 	var cmd *exec.Cmd
 	if len(commands) > 1 {
@@ -65,6 +70,6 @@ func ExecCommand(path string, command string, done chan bool) error {
 	if stdout.String() != "" {
 		log.Println(stdout.String())
 	}
-	done <- true
+	Mutex.Unlock()
 	return nil
 }
