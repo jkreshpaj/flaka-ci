@@ -10,8 +10,8 @@ go get github.com/jkreshpaj/flaka-ci
 ```
 Or just download the binary
 ```sh
-curl -LJO https://github.com/jkreshpaj/flaka-ci/raw/master/flaka-ci
-chmod 777 flaka-ci
+curl -LJO https://github.com/jkreshpaj/flaka-ci/raw/master/build/flaka-ci-<PLATFORM> --output flaka-ci
+chmod +x flaka-ci
 ./flaka-ci
 ```
 
