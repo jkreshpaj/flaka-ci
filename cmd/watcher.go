@@ -18,7 +18,7 @@ type Watcher struct {
 	ServiceCommands []string
 }
 
-//Start compares master and local commit on master
+//Start compares remote and local commit on master
 func (w *Watcher) Start() error {
 	for {
 		hash, err := w.LocalMasterHash()
@@ -30,8 +30,16 @@ func (w *Watcher) Start() error {
 			return err
 		}
 		if hash != remoteHash {
+			ntf := Notification{
+				EndpointURL: "https://hooks.slack.com/services/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",
+				Message:     "STARTED: Job started for '" + w.ServiceName + "'",
+				Type:        "info",
+			}
+			if err := ntf.Send(); err != nil {
+				return err
+			}
 			done := make(chan bool)
-			go PullRepository(w.ServicePath, done)
+			go PullRepository(w, done)
 			select {
 			case <-done:
 				if len(w.ServiceCommands) == 0 {
@@ -39,7 +47,7 @@ func (w *Watcher) Start() error {
 				}
 				for _, command := range w.ServiceCommands {
 					go func(cmd string) {
-						if err := ExecCommand(w.ServicePath, cmd); err != nil {
+						if err := ExecCommand(w, cmd); err != nil {
 							log.Println(err)
 						}
 					}(command)

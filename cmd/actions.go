@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 //UpdateLogRegexp match git pull log
@@ -17,7 +18,7 @@ var UpdateLogRegexp = `(?m)Updating [a-z0-9]{7}..[a-z0-9]{7}$`
 var Mutex = &sync.Mutex{}
 
 //PullRepository pulls a service repository
-func PullRepository(path string, done chan bool) error {
+func PullRepository(watcher *Watcher, done chan bool) error {
 	checker, err := regexp.Compile(UpdateLogRegexp)
 	if err != nil {
 		return err
@@ -25,13 +26,21 @@ func PullRepository(path string, done chan bool) error {
 	cmd := exec.Command("git", "pull")
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
-	cmd.Dir = path
+	cmd.Dir = watcher.ServicePath
 	err = cmd.Run()
 	if err != nil {
 		return err
 	}
 	updateLog := checker.FindString(string(stdout.Bytes()))
-	log.Println("\u001b[33m" + "[i] " + path + " " + updateLog + "\u001b[0m")
+	log.Println("\u001b[33m" + "[i] " + watcher.ServicePath + " " + updateLog + "\u001b[0m")
+	ntf := Notification{
+		EndpointURL: "https://hooks.slack.com/services/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",
+		Message:     "SUCCESSFUL: Update service '*bold*" + watcher.ServiceName + "'",
+		Type:        "success",
+	}
+	if err := ntf.Send(); err != nil {
+		return err
+	}
 	done <- true
 	return nil
 }
@@ -47,7 +56,7 @@ func ParseCommands(commands interface{}) ([]string, error) {
 }
 
 //ExecCommand runs command of the service specified in yml file
-func ExecCommand(path string, command string) error {
+func ExecCommand(watcher *Watcher, command string) error {
 	Mutex.Lock()
 	commands := strings.Split(command, " ")
 	var cmd *exec.Cmd
@@ -57,8 +66,9 @@ func ExecCommand(path string, command string) error {
 		cmd = exec.Command(commands[0])
 	}
 	var stdout, stderr bytes.Buffer
-	cmd.Dir = path
+	cmd.Dir = watcher.ServicePath
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	time.Sleep(5 * time.Second)
 	err := cmd.Run()
 	if err != nil {
 		log.Println("An error has occured while running command", command)
@@ -69,6 +79,14 @@ func ExecCommand(path string, command string) error {
 	}
 	if stdout.String() != "" {
 		log.Println(stdout.String())
+	}
+	ntf := Notification{
+		EndpointURL: "https://hooks.slack.com/services/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",
+		Message:     "COMPLETED: Run command '" + strings.Join(commands, " ") + "' for service '" + watcher.ServiceName + "'",
+		Type:        "success",
+	}
+	if err := ntf.Send(); err != nil {
+		return err
 	}
 	Mutex.Unlock()
 	return nil
