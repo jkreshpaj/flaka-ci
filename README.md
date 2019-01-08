@@ -17,7 +17,7 @@ chmod 777 flaka-ci
 
 ## Options
 ```
-$ flaka-ci --help
+flaka-ci --help
 Run flaka-ci [arg] to start server
 
 Usage:
