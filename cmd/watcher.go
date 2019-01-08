@@ -13,9 +13,9 @@ var CommitHashRegexp = `(?m)[a-z0-9]{40}\srefs/heads/master$`
 
 //Watcher type
 type Watcher struct {
-	ServiceName    string
-	ServicePath    string
-	ServiceCommand string
+	ServiceName     string
+	ServicePath     string
+	ServiceCommands []string
 }
 
 //Start compares master and local commit on master
@@ -34,14 +34,18 @@ func (w *Watcher) Start() error {
 			go PullRepository(w.ServicePath, done)
 			select {
 			case <-done:
-				if w.ServiceCommand == "" {
+				if len(w.ServiceCommands) == 0 {
 					return nil
 				}
-				go func() {
-					if err := ExecCommand(w.ServicePath, w.ServiceCommand); err != nil {
-						log.Println(err)
-					}
-				}()
+				for _, command := range w.ServiceCommands {
+					cmdDone := make(chan bool)
+					go func(cmd string) {
+						if err := ExecCommand(w.ServicePath, cmd, cmdDone); err != nil {
+							log.Println(err)
+						}
+					}(command)
+					<-cmdDone
+				}
 			}
 		}
 	}
@@ -84,8 +88,14 @@ func WatchCommits(c *ServerConfig) {
 	for service, options := range c.Services {
 		w := new(Watcher)
 		w.ServiceName = service
-		w.ServicePath = c.Dir + "/" + options["path"]
-		w.ServiceCommand = options["command"]
+		w.ServicePath = c.Dir + "/" + options["path"].(string)
+		if options["command"] != nil {
+			commands, err := ParseCommands(options["command"])
+			if err != nil {
+				log.Println(err)
+			}
+			w.ServiceCommands = commands
+		}
 		go w.Start()
 	}
 }

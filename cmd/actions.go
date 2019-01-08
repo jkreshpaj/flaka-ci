@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -31,8 +32,18 @@ func PullRepository(path string, done chan bool) error {
 	return nil
 }
 
+//ParseCommands return array of string commands from interface
+func ParseCommands(commands interface{}) ([]string, error) {
+	var cArr []string
+	c := reflect.ValueOf(commands)
+	for i := 0; i < c.Len(); i++ {
+		cArr = append(cArr, c.Index(i).Elem().String())
+	}
+	return cArr, nil
+}
+
 //ExecCommand runs command of the service specified in yml file
-func ExecCommand(path string, command string) error {
+func ExecCommand(path string, command string, done chan bool) error {
 	commands := strings.Split(command, " ")
 	var cmd *exec.Cmd
 	if len(commands) > 1 {
@@ -54,5 +65,6 @@ func ExecCommand(path string, command string) error {
 	if stdout.String() != "" {
 		log.Println(stdout.String())
 	}
+	done <- true
 	return nil
 }

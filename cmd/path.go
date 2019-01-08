@@ -11,8 +11,8 @@ import (
 //ServerConfig contains map of services directories
 type ServerConfig struct {
 	Dir      string
-	Services map[string]map[string]string `yaml:"services"`
-	Port     int                          `yaml:"port"`
+	Services map[string]map[string]interface{} `yaml:"services"`
+	Port     int                               `yaml:"port"`
 }
 
 //Init server config
@@ -54,11 +54,12 @@ func (c *ServerConfig) ReadConfig() error {
 //CheckDirectories check if directories exist
 func (c *ServerConfig) CheckDirectories() error {
 	for _, options := range c.Services {
-		if options["path"] == "" {
+		path := options["path"].(string)
+		if path == "" {
 			return errors.New("Error in flaka-ci.yml: path option is required")
 		}
-		if _, err := os.Stat(c.Dir + "/" + options["path"]); os.IsNotExist(err) {
-			return errors.New("flaka-ci.yml: Could not find directory " + options["path"] + " in " + c.Dir)
+		if _, err := os.Stat(c.Dir + "/" + path); os.IsNotExist(err) {
+			return errors.New("flaka-ci.yml: Could not find directory " + path + " in " + c.Dir)
 		}
 	}
 	return nil
