@@ -22,13 +22,35 @@ var rootCmd = &cobra.Command{
 	Use:   "flaka-ci",
 	Short: "Run flaka-ci [arg] to start server",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Print("FlakaCI started in background")
+
+		// if cmd.Flag("detach").Value.String() == true {
+		// 	cntxt := &daemon.Context{
+		// 		PidFileName: "flaka-pid",
+		// 		PidFilePerm: 0644,
+		// 		LogFileName: "flaka-log",
+		// 		LogFilePerm: 0640,
+		// 		WorkDir:     "./",
+		// 		Umask:       027,
+		// 		Args:        []string{"[go-daemon sample]"},
+		// 	}
+		// 	d, err := cntxt.Reborn()
+		// 	if err != nil {
+		// 		log.Fatal("Unable to run: ", err)
+		// 	}
+		// 	if d != nil {
+		// 		return
+		// 	}
+		// 	defer cntxt.Release()
+		// }
+
 		configFile := cmd.Flag("config").Value.String()
 		nURL := cmd.Flag("notify").Value.String()
+		port := cmd.Flag("port").Value.String()
+
 		if err := server.Init(configFile, nURL); err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println(cmd.Flag("detach").Value)
 
 		WatchCommits(&server)
 
@@ -36,7 +58,7 @@ var rootCmd = &cobra.Command{
 			fmt.Fprintf(w, "%s", "FlakaCI server running")
 		})
 
-		http.ListenAndServe(":"+cmd.Flag("port").Value.String(), nil)
+		http.ListenAndServe(":"+port, nil)
 	},
 }
 
