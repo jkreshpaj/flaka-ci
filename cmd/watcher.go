@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"log"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -22,42 +21,26 @@ type Watcher struct {
 //Start compares remote and local commit on master
 func (w *Watcher) Start() error {
 	for {
-		hash, err := w.LocalMasterHash()
-		if err != nil {
-			return err
-		}
-		remoteHash, err := w.RemoteMasterHash()
-		if err != nil {
-			return err
-		}
-		if hash != remoteHash {
-			if w.SendNotification() {
-				ntf := Notification{
-					EndpointURL: w.Notifications,
-					Title:       "STARTED: Job started for '" + w.ServiceName + "'",
-					Type:        "info",
-				}
-				if err := ntf.Send(); err != nil {
-					return err
-				}
-			}
-			done := make(chan bool)
-			go PullRepository(w, done)
-			select {
-			case <-done:
-				if len(w.ServiceCommands) == 0 {
-					return nil
-				}
-				for _, command := range w.ServiceCommands {
-					go func(cmd string) {
-						if err := ExecCommand(w, cmd); err != nil {
-							log.Println(err)
-						}
-					}(command)
-				}
-			}
+		if w.HasChanged() {
+			w.job()
 		}
 	}
+}
+
+//HasChanged checks if remote is updated
+func (w *Watcher) HasChanged() bool {
+	hash, err := w.LocalMasterHash()
+	if err != nil {
+		HandleError("Error getting local hash", err)
+	}
+	remoteHash, err := w.RemoteMasterHash()
+	if err != nil {
+		HandleError("Error getting master hash", err)
+	}
+	if remoteHash != hash {
+		return true
+	}
+	return false
 }
 
 //LocalMasterHash returns current local commit hash
@@ -110,10 +93,46 @@ func WatchCommits(c *ServerConfig) {
 		if options["command"] != nil {
 			commands, err := ParseCommands(options["command"])
 			if err != nil {
-				log.Println(err)
+				HandleError("", err)
 			}
 			w.ServiceCommands = commands
 		}
 		go w.Start()
+	}
+}
+
+func (w *Watcher) job() error {
+	done := make(chan bool)
+	w.composeNotification("Started job for service ", "info", "")
+	go PullRepository(w, done)
+	select {
+	case <-done:
+		if len(w.ServiceCommands) == 0 {
+			return nil
+		}
+		for _, command := range w.ServiceCommands {
+			go func(cmd string) {
+				if err := ExecCommand(w, cmd); err != nil {
+					HandleError("Error running command", err)
+				}
+			}(command)
+		}
+	}
+	return nil
+}
+
+func (w *Watcher) composeNotification(text string, ntfType string, ntfLog string) {
+	if w.SendNotification() {
+		ntf := Notification{
+			EndpointURL: w.Notifications,
+			Title:       text + w.ServiceName,
+			Type:        ntfType,
+		}
+		if ntfLog != "" {
+			ntf.Log = ntfLog
+		}
+		if err := ntf.Send(); err != nil {
+			HandleError("Error sending notification", err)
+		}
 	}
 }

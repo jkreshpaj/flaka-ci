@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 )
 
 //UpdateLogRegexp match git pull log
@@ -32,18 +31,8 @@ func PullRepository(watcher *Watcher, done chan bool) error {
 		return err
 	}
 	updateLog := checker.FindString(string(stdout.Bytes()))
-	log.Println("\u001b[33m" + "[i] " + watcher.ServicePath + " " + updateLog + "\u001b[0m")
-	if watcher.SendNotification() {
-		ntf := Notification{
-			EndpointURL: watcher.Notifications,
-			Title:       "SUCCESSFUL: Update service *" + watcher.ServiceName + "*",
-			Log:         "```Output:\n" + stdout.String() + "```",
-			Type:        "success",
-		}
-		if err := ntf.Send(); err != nil {
-			return err
-		}
-	}
+	log.Println("\u001b[34m" + "[i] " + watcher.ServicePath + " " + updateLog + "\u001b[0m")
+	watcher.composeNotification("SUCCESSFUL: Update service ", "success", "```Output:\n"+stdout.String()+"```")
 	done <- true
 	return nil
 }
@@ -71,7 +60,6 @@ func ExecCommand(watcher *Watcher, command string) error {
 	var stdout, stderr bytes.Buffer
 	cmd.Dir = watcher.ServicePath
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
-	time.Sleep(5 * time.Second)
 	err := cmd.Run()
 	if err != nil {
 		if stderr.String() != "" {
@@ -81,35 +69,8 @@ func ExecCommand(watcher *Watcher, command string) error {
 	}
 	if stdout.String() != "" {
 		log.Println(stdout.String())
-		if watcher.SendNotification() {
-			ntf := Notification{
-				EndpointURL: watcher.Notifications,
-				Title:       "COMPLETED: Run command *" + strings.Join(commands, " ") + "* for service *" + watcher.ServiceName + "*",
-				Log:         "```Output:\n" + stdout.String() + "```",
-				Type:        "success",
-			}
-			if err := ntf.Send(); err != nil {
-				return err
-			}
-		}
+		watcher.composeNotification("COMPLETED: Run command *"+strings.Join(commands, " ")+"* for service *", "success", "```Output:\n"+stdout.String()+"```")
 	}
 	Mutex.Unlock()
 	return nil
-}
-
-//HandleError logs error and sends to slack
-func HandleError(text string, errLog string) {
-	if server.NotificationURL != "" {
-		ntf := Notification{
-			EndpointURL: server.NotificationURL,
-			Title:       text,
-			Log:         "```" + errLog + "```",
-			Type:        "error",
-		}
-		if err := ntf.Send(); err != nil {
-			log.Println(err)
-		}
-	}
-	log.Println(text)
-	log.Println(errLog)
 }
