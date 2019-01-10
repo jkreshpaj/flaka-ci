@@ -57,13 +57,13 @@ services:
         path: /service-2
         command:
             - echo Command 1 Service 2
-    servicename3:
+    test:
         path: /service-3
         build: true
         command:
-            - echo Testing FlakaCI
+            - echo Testing errors
             - ng build //This will throw an error
-            - echo Command 3
+            - echo Other command
 ```
 
 In flaka-ci.yml you specify all your services. Every services must be initialized with git and have its own repo. Service name can be whatever you want except when your are using it with docker-compose it must be the same.
