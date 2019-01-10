@@ -72,10 +72,20 @@ Under each service you have the options:
 - build: If you are using this service with docker-compose and you want to rebuild it on update
 - command: Commands list to be executed after service is updated and container is rebuild (in case you have it). Commands are executed one by one in the service directory.
 #### Starting the server
-To start the server you just need to run ```flaka-ci``` and optional flags
+To start the server you just need to run ```flaka-ci``` and optional flags.
 By default FlakaCI runs on port 7000 and in the current process.
 If you want to run it in background you can use ```--detach``` or ```-d``` flag.
 ```
 $ flaka-ci -d
 FlakaCI started in background.
 ```
+
+##### Logs
+If you are runnig  in background you can see what services are beeing updated and logs of each command bu running ```flaka-ci logs```
+Additionally you can tell FlakaCI to send a noitfication using slack. All you need to do is create a simple slack app and when you run ```flaka-ci``` pass your webhook url in ```--notify``` or ```-n``` flag.
+
+```
+$ flaka-ci -d -n https://hooks.slack.com/services/AOIE302573/AFSV31095732t/BASG32095302ugv2bo43vbr
+```
+
+<img src="https://i.imgur.com/TJ1luLi.png" align="center" />
