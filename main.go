@@ -1,7 +1,9 @@
 package main
 
-import "github.com/flakaal/flaka-ci/cmd"
+import (
+	"github.com/flakaal/flaka-ci/vendor"
+)
 
 func main() {
-	cmd.Execute()
+	vendor.Execute()
 }
