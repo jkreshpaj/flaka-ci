@@ -40,15 +40,13 @@ var rootCmd = &cobra.Command{
 		}
 
 		if cmd.Flag("stop").Value.String() == "true" {
-			daemon.Kill()
+			daemon.Getpid()
 			os.Exit(0)
 		}
 
 		if err := server.Init(configFile, nURL); err != nil {
 			log.Fatal(err)
 		}
-
-		daemon.Pid = os.Getpid()
 
 		WatchCommits(&server)
 

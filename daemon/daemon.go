@@ -3,17 +3,19 @@ package daemon
 import (
 	"bytes"
 	"log"
+	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 )
 
 //Process FlakaCI background process options
 type Process struct {
-	Config  string
-	Notify  string
-	Port    string
-	Pid     int
-	Logfile string
+	Config      string
+	Notify      string
+	Port        string
+	Pid         int
+	UserHomedir string
 }
 
 //Start New FlakaCI process
@@ -23,6 +25,7 @@ func (p *Process) Start() {
 	p.exec(flags)
 }
 
+//Kill FlakaCI background process
 func (p *Process) Kill() {
 	log.Println("KILLING PROCESS", p.Pid)
 	processID := strconv.Itoa(p.Pid)
@@ -56,5 +59,34 @@ func (p *Process) exec(flags string) {
 	if stderr.String() != "" {
 		log.Println("ERROR EXEC")
 		log.Fatal(stderr.String())
+	}
+}
+
+//Getpid of FlakaCI process
+func (p *Process) Getpid() {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	p.UserHomedir = usr.HomeDir
+	cmd := exec.Command("/bin/sh", "daemon/pid.sh")
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	if err := cmd.Run(); err != nil {
+		log.Println("ERROR OCCURED ON RUN")
+		log.Println(err)
+	}
+	if stderr.String() != "" {
+		log.Println("ERROR GETPID")
+		log.Fatal(stderr.String())
+	}
+	log.Println(stdout.String())
+}
+
+func (p *Process) createDir() {
+	if _, err := os.Stat(p.UserHomedir + "/.flaka-ci"); os.IsNotExist(err) {
+		if err := os.Mkdir(p.UserHomedir+"/.flaka-ci", os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
